@@ -32,6 +32,7 @@ export default function DesignerPage() {
         transformMode,
         scale,
         uniformScale,
+        isFirstPerson,
         buildHouse,
         loadHouse,
         loadFurniture,
@@ -46,6 +47,7 @@ export default function DesignerPage() {
         resetSize,
         toggleUniformScale,
         resetCamera,
+        setFirstPersonMode,
         toggleGrid,
     } = useThreeEngine(canvasRef);
 
@@ -122,6 +124,8 @@ export default function DesignerPage() {
                 gridActive={gridActive}
                 onAddFurniture={handleAddFurniture}
                 onResetCamera={resetCamera}
+                onFirstPersonMode={setFirstPersonMode}
+                isFirstPerson={isFirstPerson}
                 onToggleGrid={toggleGrid}
                 onChangeTransformMode={changeTransformMode}
             />

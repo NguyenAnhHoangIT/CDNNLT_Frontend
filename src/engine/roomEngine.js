@@ -38,6 +38,11 @@ export class RoomEngine {
         this.mixers = [];
         this.transformMode = 'translate';
 
+        // First-person mode
+        this.isFirstPerson = false;
+        this._fpHeight = 1.6; // Human eye height in meters
+        this._fpCollisionRadius = 0.3; // Collision capsule radius
+
         // Mouse tracking for click vs drag
         this.isPointerDown = false;
         this.isRightMouseDown = false;
@@ -62,6 +67,7 @@ export class RoomEngine {
         this.onLoadingEnd = null;         // ()
         this.onToast = null;              // (message, type)
         this.onScaleChanged = null;       // ({ x, y, z })
+        this.onFirstPersonChanged = null; // (boolean)
     }
 
     /**
@@ -158,6 +164,9 @@ export class RoomEngine {
         window.addEventListener('keydown', this._onKeyDown);
         window.addEventListener('keyup', this._onKeyUp);
 
+        // Pointer lock change (for exiting FP mode when ESC is pressed)
+        document.addEventListener('pointerlockchange', this._onPointerLockChange);
+
         // Start render loop
         this._animate();
     }
@@ -175,6 +184,7 @@ export class RoomEngine {
         window.removeEventListener('resize', this._onWindowResize);
         window.removeEventListener('keydown', this._onKeyDown);
         window.removeEventListener('keyup', this._onKeyUp);
+        document.removeEventListener('pointerlockchange', this._onPointerLockChange);
 
         this.transformControls?.dispose();
         this.orbitControls?.dispose();
@@ -737,6 +747,13 @@ export class RoomEngine {
         e.preventDefault();
     };
 
+    _onPointerLockChange = () => {
+        // If pointer lock was lost while in FP mode, exit FP mode
+        if (this.isFirstPerson && document.pointerLockElement !== this._canvas) {
+            this.setFirstPersonMode(false);
+        }
+    };
+
     _onPointerDown = (e) => {
         if (e.button === 2) { // Chuột phải
             this.isRightMouseDown = true;
@@ -776,29 +793,42 @@ export class RoomEngine {
         }
     };
 
+    /**
+     * Shared logic for first-person camera rotation (yaw + pitch).
+     */
+    _applyFPLook(dx, dy) {
+        const sensitivity = 0.003;
+        const dist = Math.max(0.1, this.camera.position.distanceTo(this.orbitControls.target));
+        const forward = new THREE.Vector3();
+        this.camera.getWorldDirection(forward);
+
+        // Yaw (quanh trục Y thế giới)
+        forward.applyAxisAngle(new THREE.Vector3(0, 1, 0), -dx * sensitivity);
+
+        // Pitch (quanh trục X nội bộ) — clamp để không lật camera
+        const right = new THREE.Vector3().crossVectors(forward, this.camera.up).normalize();
+        const currentPitch = Math.asin(THREE.MathUtils.clamp(forward.y, -1, 1));
+        const newPitch = THREE.MathUtils.clamp(currentPitch - dy * sensitivity, -Math.PI / 2 + 0.1, Math.PI / 2 - 0.1);
+        const pitchDelta = newPitch - currentPitch;
+        forward.applyAxisAngle(right, pitchDelta);
+
+        this.orbitControls.target.copy(this.camera.position).add(forward.multiplyScalar(dist));
+        this.orbitControls.update();
+    }
+
     _onPointerMove = (e) => {
+        // First-person pointer-lock: mouse moves camera automatically
+        if (this.isFirstPerson && document.pointerLockElement === this._canvas) {
+            this._applyFPLook(e.movementX, e.movementY);
+            return;
+        }
+
+        // Normal mode: right-click to look around
         if (this.isRightMouseDown) {
             const dx = e.clientX - this.lastMousePos.x;
             const dy = e.clientY - this.lastMousePos.y;
             this.lastMousePos = { x: e.clientX, y: e.clientY };
-
-            const sensitivity = 0.003;
-            
-            // Xoay camera tại chỗ (First Person Look)
-            const dist = Math.max(0.1, this.camera.position.distanceTo(this.orbitControls.target));
-            const forward = new THREE.Vector3();
-            this.camera.getWorldDirection(forward);
-            
-            // Yaw (quanh trục Y thế giới)
-            forward.applyAxisAngle(new THREE.Vector3(0, 1, 0), -dx * sensitivity);
-            
-            // Pitch (quanh trục X nội bộ của camera)
-            const right = new THREE.Vector3().crossVectors(forward, this.camera.up).normalize();
-            forward.applyAxisAngle(right, -dy * sensitivity);
-            
-            // Cập nhật target cho OrbitControls
-            this.orbitControls.target.copy(this.camera.position).add(forward.multiplyScalar(dist));
-            this.orbitControls.update();
+            this._applyFPLook(dx, dy);
             return;
         }
 
@@ -1055,6 +1085,95 @@ export class RoomEngine {
         });
     }
 
+    setFirstPersonMode(enable) {
+        // Toggle if no argument given
+        if (enable === undefined) {
+            enable = !this.isFirstPerson;
+        }
+        this.isFirstPerson = enable;
+
+        if (enable) {
+            // Deselect any furniture
+            this.deselectFurniture();
+
+            // Position camera at human eye height inside the room
+            this.camera.position.set(0, this._fpHeight, 5);
+            this.camera.lookAt(0, this._fpHeight, 0);
+
+            // Disable orbit features: no pan, no zoom
+            this.orbitControls.enablePan = false;
+            this.orbitControls.enableZoom = false;
+            this.orbitControls.enableRotate = false;
+            this.orbitControls.target.set(0, this._fpHeight, 0);
+            this.orbitControls.update();
+
+            // Request pointer lock for free mouse-look (like FPS game)
+            this._canvas?.requestPointerLock?.();
+
+            this.onToast?.('Góc nhìn thứ nhất: WASD di chuyển, di chuột nhìn xung quanh, ESC hoặc nhấn lại để thoát.', 'info');
+        } else {
+            // Exit pointer lock
+            if (document.pointerLockElement === this._canvas) {
+                document.exitPointerLock?.();
+            }
+
+            // Restore orbit controls
+            this.orbitControls.enablePan = true;
+            this.orbitControls.enableZoom = true;
+            this.orbitControls.enableRotate = false; // We handle right-click rotate ourselves
+
+            // Reset camera to overview position
+            this._animateCamera(
+                new THREE.Vector3(20, 20, 20),
+                new THREE.Vector3(0, 0, 0)
+            );
+
+            this.onToast?.('Đã trở lại chế độ xem tổng quan.', 'info');
+        }
+
+        this.onFirstPersonChanged?.(this.isFirstPerson);
+    }
+
+    /**
+     * Check if moving to `newPos` would collide with walls or furniture.
+     * Returns true if blocked.
+     */
+    _checkCollision(newPos) {
+        const directions = [
+            new THREE.Vector3(1, 0, 0),
+            new THREE.Vector3(-1, 0, 0),
+            new THREE.Vector3(0, 0, 1),
+            new THREE.Vector3(0, 0, -1),
+        ];
+
+        const collidables = [];
+        if (this.houseModel) {
+            this.houseModel.traverse(c => {
+                if (c.isMesh && c.userData.isWall) collidables.push(c);
+            });
+        }
+        this.furnitureItems.forEach(item => {
+            item.model.traverse(c => {
+                if (c.isMesh) collidables.push(c);
+            });
+        });
+
+        if (collidables.length === 0) return false;
+
+        const origin = newPos.clone();
+        origin.y = this._fpHeight * 0.5; // Check at waist height
+
+        for (const dir of directions) {
+            this.raycaster.set(origin, dir);
+            this.raycaster.far = this._fpCollisionRadius;
+            const hits = this.raycaster.intersectObjects(collidables, false);
+            if (hits.length > 0) {
+                return true; // Blocked
+            }
+        }
+        return false;
+    }
+
     // =====================================================================
     // RENDER LOOP
     // =====================================================================
@@ -1064,30 +1183,64 @@ export class RoomEngine {
         
         // Handle WASD movement
         if (this.keys && (this.keys.w || this.keys.a || this.keys.s || this.keys.d || this.keys.space || this.keys.shift)) {
-            const moveSpeed = 8.0 * delta; // Tăng tốc độ bay một chút vì phòng đã rộng x3
             const moveVec = new THREE.Vector3();
             
             const forward = new THREE.Vector3();
             this.camera.getWorldDirection(forward);
-            // Bỏ forward.y = 0 để camera có thể "bay" xuống thấp vào trong nhà
-            if (forward.lengthSq() > 0) forward.normalize();
             
-            const right = new THREE.Vector3();
-            right.crossVectors(forward, this.camera.up);
-            if (right.lengthSq() > 0) right.normalize();
-            
-            if (this.keys.w) moveVec.add(forward.clone().multiplyScalar(moveSpeed));
-            if (this.keys.s) moveVec.add(forward.clone().multiplyScalar(-moveSpeed));
-            if (this.keys.a) moveVec.add(right.clone().multiplyScalar(-moveSpeed));
-            if (this.keys.d) moveVec.add(right.clone().multiplyScalar(moveSpeed));
-            
-            // Bay lên/xuống (Trục Y thế giới)
-            if (this.keys.space) moveVec.y += moveSpeed;
-            if (this.keys.shift) moveVec.y -= moveSpeed;
-            
-            if (moveVec.lengthSq() > 0) {
-                this.camera.position.add(moveVec);
-                this.orbitControls.target.add(moveVec);
+            if (this.isFirstPerson) {
+                // ====== FIRST-PERSON MODE ======
+                const moveSpeed = 4.0 * delta; // Walking speed
+                
+                // Flatten forward to horizontal plane (no flying)
+                forward.y = 0;
+                if (forward.lengthSq() > 0) forward.normalize();
+                
+                const right = new THREE.Vector3();
+                right.crossVectors(forward, new THREE.Vector3(0, 1, 0));
+                if (right.lengthSq() > 0) right.normalize();
+                
+                if (this.keys.w) moveVec.add(forward.clone().multiplyScalar(moveSpeed));
+                if (this.keys.s) moveVec.add(forward.clone().multiplyScalar(-moveSpeed));
+                if (this.keys.a) moveVec.add(right.clone().multiplyScalar(-moveSpeed));
+                if (this.keys.d) moveVec.add(right.clone().multiplyScalar(moveSpeed));
+                // No vertical movement in FP mode (Space/Shift ignored)
+                
+                if (moveVec.lengthSq() > 0) {
+                    // Check collision before moving
+                    const candidatePos = this.camera.position.clone().add(moveVec);
+                    if (!this._checkCollision(candidatePos)) {
+                        this.camera.position.add(moveVec);
+                        this.orbitControls.target.add(moveVec);
+                    }
+                    // Lock camera Y to fixed height, preserve look angle
+                    const targetOffsetY = this.orbitControls.target.y - this.camera.position.y;
+                    this.camera.position.y = this._fpHeight;
+                    this.orbitControls.target.y = this._fpHeight + targetOffsetY;
+                }
+            } else {
+                // ====== NORMAL (ORBIT) MODE ======
+                const moveSpeed = 8.0 * delta;
+                
+                if (forward.lengthSq() > 0) forward.normalize();
+                
+                const right = new THREE.Vector3();
+                right.crossVectors(forward, this.camera.up);
+                if (right.lengthSq() > 0) right.normalize();
+                
+                if (this.keys.w) moveVec.add(forward.clone().multiplyScalar(moveSpeed));
+                if (this.keys.s) moveVec.add(forward.clone().multiplyScalar(-moveSpeed));
+                if (this.keys.a) moveVec.add(right.clone().multiplyScalar(-moveSpeed));
+                if (this.keys.d) moveVec.add(right.clone().multiplyScalar(moveSpeed));
+                
+                // Bay lên/xuống (Trục Y thế giới)
+                if (this.keys.space) moveVec.y += moveSpeed;
+                if (this.keys.shift) moveVec.y -= moveSpeed;
+                
+                if (moveVec.lengthSq() > 0) {
+                    this.camera.position.add(moveVec);
+                    this.orbitControls.target.add(moveVec);
+                }
             }
         }
         

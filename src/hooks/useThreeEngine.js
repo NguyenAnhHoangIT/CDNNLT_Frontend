@@ -18,6 +18,7 @@ export function useThreeEngine(canvasRef) {
     const [transformMode, setTransformMode] = useState('translate');
     const [scale, setScale] = useState({ x: 100, y: 100, z: 100 });
     const [uniformScale, setUniformScale] = useState(true);
+    const [isFirstPerson, setIsFirstPerson] = useState(false);
     const toastIdRef = useRef(0);
 
     // Initialize engine
@@ -67,6 +68,10 @@ export function useThreeEngine(canvasRef) {
 
         engine.onScaleChanged = (s) => {
             setScale(s);
+        };
+
+        engine.onFirstPersonChanged = (val) => {
+            setIsFirstPerson(val);
         };
 
         engine.init(canvas);
@@ -140,6 +145,10 @@ export function useThreeEngine(canvasRef) {
         engineRef.current?.resetCamera();
     }, []);
 
+    const setFirstPersonMode = useCallback(() => {
+        engineRef.current?.setFirstPersonMode();
+    }, []);
+
     const toggleGrid = useCallback(() => {
         const visible = engineRef.current?.toggleGrid();
         setGridActive(visible);
@@ -162,6 +171,7 @@ export function useThreeEngine(canvasRef) {
         transformMode,
         scale,
         uniformScale,
+        isFirstPerson,
 
         // Methods
         buildHouse,
@@ -178,6 +188,7 @@ export function useThreeEngine(canvasRef) {
         resetSize,
         toggleUniformScale,
         resetCamera,
+        setFirstPersonMode,
         toggleGrid,
         removeToast,
     };
