@@ -1,23 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DesignPages.css';
 
-const OBJECTS = ['Sofa', 'Chair', 'Table', 'Bed', 'Bookshelf', 'Cabinet', 'Lamp', 'Plant Pot'];
-const STYLES = ['Modern', 'Classic', 'Minimalist', 'Industrial', 'Scandinavian', 'Vintage'];
+const API_BASE = 'http://localhost:8888';
 
 export default function ChoicePage() {
     const navigate = useNavigate();
-    const [object, setObject] = useState(OBJECTS[0]);
-    const [style, setStyle] = useState(STYLES[0]);
+    const [objects, setObjects] = useState([]);
+    const [styles, setStyles] = useState([]);
+    const [object, setObject] = useState('');
+    const [style, setStyle] = useState('');
     const [loading, setLoading] = useState(false);
+    const [fetchingOptions, setFetchingOptions] = useState(true);
     const [error, setError] = useState(null);
+
+    // Fetch objects and styles from OptionService on mount
+    useEffect(() => {
+        const fetchOptions = async () => {
+            try {
+                const [objRes, styleRes] = await Promise.all([
+                    fetch(`${API_BASE}/option/objects`),
+                    fetch(`${API_BASE}/option/styles`)
+                ]);
+                const objData = await objRes.json();
+                const styleData = await styleRes.json();
+                setObjects(objData);
+                setStyles(styleData);
+                if (objData.length > 0) setObject(objData[0].name);
+                if (styleData.length > 0) setStyle(styleData[0].name);
+            } catch (err) {
+                setError('Không thể tải danh sách tùy chọn. Vui lòng kiểm tra backend.');
+            } finally {
+                setFetchingOptions(false);
+            }
+        };
+        fetchOptions();
+    }, []);
 
     const handleGenerate = async () => {
         setLoading(true);
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:8888/model/generate', {
+            const response = await fetch(`${API_BASE}/model/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ object, style: style.toLowerCase() })
@@ -25,7 +50,7 @@ export default function ChoicePage() {
 
             const data = await response.json();
             if (data.success === 'true') {
-                navigate('/design', { state: { generatedModelUrl: `http://localhost:8888/${data.path}` } });
+                navigate('/design', { state: { generatedModelUrl: `${API_BASE}/${data.path}` } });
             } else {
                 setError(data.error || 'Đã xảy ra lỗi khi tạo mô hình.');
             }
@@ -35,6 +60,17 @@ export default function ChoicePage() {
             setLoading(false);
         }
     };
+
+    if (fetchingOptions) {
+        return (
+            <div className="design-page">
+                <div className="page-header">
+                    <h1>Design by choice</h1>
+                    <p>Đang tải danh sách tùy chọn...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="design-page">
@@ -47,13 +83,13 @@ export default function ChoicePage() {
                 <div className="form-group">
                     <label>Bạn muốn thiết kế gì?</label>
                     <div className="options-grid">
-                        {OBJECTS.map(obj => (
+                        {objects.map(obj => (
                             <button
-                                key={obj}
-                                className={`option-btn ${object === obj ? 'active' : ''}`}
-                                onClick={() => setObject(obj)}
+                                key={obj.id}
+                                className={`option-btn ${object === obj.name ? 'active' : ''}`}
+                                onClick={() => setObject(obj.name)}
                             >
-                                {obj}
+                                {obj.name}
                             </button>
                         ))}
                     </div>
@@ -62,13 +98,13 @@ export default function ChoicePage() {
                 <div className="form-group">
                     <label>Phong cách thiết kế</label>
                     <div className="options-grid">
-                        {STYLES.map(s => (
+                        {styles.map(s => (
                             <button
-                                key={s}
-                                className={`option-btn ${style === s ? 'active' : ''}`}
-                                onClick={() => setStyle(s)}
+                                key={s.id}
+                                className={`option-btn ${style === s.name ? 'active' : ''}`}
+                                onClick={() => setStyle(s.name)}
                             >
-                                {s}
+                                {s.name}
                             </button>
                         ))}
                     </div>
@@ -77,7 +113,7 @@ export default function ChoicePage() {
                 <button
                     className={`generate-btn ${loading ? 'loading' : ''}`}
                     onClick={handleGenerate}
-                    disabled={loading}
+                    disabled={loading || !object || !style}
                 >
                     {loading ? 'Đang thiết kế...' : 'Bắt đầu tạo 3D'}
                 </button>

@@ -1,17 +1,20 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './DesignPages.css';
 
-const OBJECTS = ['Sofa', 'Chair', 'Table', 'Bed', 'Bookshelf', 'Cabinet', 'Lamp', 'Plant Pot'];
-const STYLES = ['Modern', 'Classic', 'Minimalist', 'Industrial', 'Scandinavian', 'Vintage'];
+const API_BASE = 'http://localhost:8888';
 
 export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLoadGeneratedModel }) {
     const [isClosing, setIsClosing] = useState(false);
     const [step, setStep] = useState(1);
     const [selectedMethod, setSelectedMethod] = useState(null);
 
+    // Data from OptionService
+    const [objects, setObjects] = useState([]);
+    const [styles, setStyles] = useState([]);
+
     // Form states
-    const [object, setObject] = useState(OBJECTS[0]);
-    const [style, setStyle] = useState(STYLES[0]);
+    const [object, setObject] = useState('');
+    const [style, setStyle] = useState('');
     const [description, setDescription] = useState('');
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
@@ -19,6 +22,28 @@ export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLo
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const fileInputRef = useRef(null);
+
+    // Fetch objects and styles when modal opens
+    useEffect(() => {
+        if (!isOpen) return;
+        const fetchOptions = async () => {
+            try {
+                const [objRes, styleRes] = await Promise.all([
+                    fetch(`${API_BASE}/option/objects`),
+                    fetch(`${API_BASE}/option/styles`)
+                ]);
+                const objData = await objRes.json();
+                const styleData = await styleRes.json();
+                setObjects(objData);
+                setStyles(styleData);
+                if (objData.length > 0) setObject(objData[0].name);
+                if (styleData.length > 0) setStyle(styleData[0].name);
+            } catch (err) {
+                console.error('Failed to fetch options:', err);
+            }
+        };
+        fetchOptions();
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -66,7 +91,7 @@ export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLo
             let response, data;
 
             if (selectedMethod === 'choice') {
-                response = await fetch('http://localhost:8888/model/generate', {
+                response = await fetch(`${API_BASE}/model/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ object, style: style.toLowerCase() })
@@ -77,7 +102,7 @@ export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLo
                     setLoading(false);
                     return;
                 }
-                response = await fetch('http://localhost:8888/model/generate_custom', {
+                response = await fetch(`${API_BASE}/model/generate_custom`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ description })
@@ -90,7 +115,7 @@ export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLo
                 }
                 const formData = new FormData();
                 formData.append('file', file);
-                response = await fetch('http://localhost:8888/model/generate_from_image', {
+                response = await fetch(`${API_BASE}/model/generate_from_image`, {
                     method: 'POST',
                     body: formData
                 });
@@ -99,7 +124,7 @@ export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLo
             data = await response.json();
 
             if (data.success === 'true') {
-                onLoadGeneratedModel(`http://localhost:8888/${data.path}`);
+                onLoadGeneratedModel(`${API_BASE}/${data.path}`);
                 handleClose();
             } else {
                 setError(data.error || 'Đã xảy ra lỗi khi tạo mô hình.');
@@ -209,16 +234,16 @@ export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLo
                                         <div className="form-group" style={{ marginBottom: '15px' }}>
                                             <label style={{ fontSize: '0.85rem' }}>Bạn muốn thiết kế gì?</label>
                                             <div className="options-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                                                {OBJECTS.map(obj => (
-                                                    <button key={obj} className={`option-btn ${object === obj ? 'active' : ''}`} onClick={() => setObject(obj)} style={{ padding: '8px', fontSize: '0.8rem' }}>{obj}</button>
+                                                {objects.map(obj => (
+                                                    <button key={obj.id} className={`option-btn ${object === obj.name ? 'active' : ''}`} onClick={() => setObject(obj.name)} style={{ padding: '8px', fontSize: '0.8rem' }}>{obj.name}</button>
                                                 ))}
                                             </div>
                                         </div>
                                         <div className="form-group" style={{ marginBottom: '20px' }}>
                                             <label style={{ fontSize: '0.85rem' }}>Phong cách thiết kế</label>
                                             <div className="options-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                                                {STYLES.map(s => (
-                                                    <button key={s} className={`option-btn ${style === s ? 'active' : ''}`} onClick={() => setStyle(s)} style={{ padding: '8px', fontSize: '0.8rem' }}>{s}</button>
+                                                {styles.map(s => (
+                                                    <button key={s.id} className={`option-btn ${style === s.name ? 'active' : ''}`} onClick={() => setStyle(s.name)} style={{ padding: '8px', fontSize: '0.8rem' }}>{s.name}</button>
                                                 ))}
                                             </div>
                                         </div>
