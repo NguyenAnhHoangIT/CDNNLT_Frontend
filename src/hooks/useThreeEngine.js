@@ -84,8 +84,8 @@ export function useThreeEngine(canvasRef) {
     }, [canvasRef]);
 
     // ===== Engine method wrappers =====
-    const buildHouse = useCallback((shapeId) => {
-        engineRef.current?.buildHouse(shapeId);
+    const buildHouse = useCallback((shapeId, dimensions) => {
+        engineRef.current?.buildHouse(shapeId, dimensions);
     }, []);
 
     const loadHouse = useCallback((file) => {

@@ -244,7 +244,7 @@ export class RoomEngine {
     // =====================================================================
     // HOUSE LOADING & GENERATION
     // =====================================================================
-    buildHouse(shapeId) {
+    buildHouse(shapeId, dimensions) {
         this.onLoadingStart?.('Đang dựng phòng...');
         
         if (this.houseModel) {
@@ -255,70 +255,71 @@ export class RoomEngine {
         const roomGroup = new THREE.Group();
         roomGroup.userData.isHouse = true;
 
+        // User dimensions (meters), defaults to 8x8
+        const halfL = (dimensions?.length || 8) / 2;
+        const halfW = (dimensions?.width || 8) / 2;
+
         // Base unit: 1 unit = 1 meter
         const wallHeight = 3.0;
         const wallThickness = 0.2;
         let points = [];
 
-        // Define room outlines (x, z coordinates), CCW order
+        // Define room outlines using user dimensions
         switch (shapeId) {
             case 'square':
                 points = [
-                    new THREE.Vector2(-4, -4),
-                    new THREE.Vector2(4, -4),
-                    new THREE.Vector2(4, 4),
-                    new THREE.Vector2(-4, 4)
+                    new THREE.Vector2(-halfL, -halfW),
+                    new THREE.Vector2(halfL, -halfW),
+                    new THREE.Vector2(halfL, halfW),
+                    new THREE.Vector2(-halfL, halfW)
                 ];
                 break;
             case 'l-shape':
                 points = [
-                    new THREE.Vector2(-4, -4),
-                    new THREE.Vector2(4, -4),
-                    new THREE.Vector2(4, 0),
+                    new THREE.Vector2(-halfL, -halfW),
+                    new THREE.Vector2(halfL, -halfW),
+                    new THREE.Vector2(halfL, 0),
                     new THREE.Vector2(0, 0),
-                    new THREE.Vector2(0, 4),
-                    new THREE.Vector2(-4, 4)
+                    new THREE.Vector2(0, halfW),
+                    new THREE.Vector2(-halfL, halfW)
                 ];
                 break;
-            case 'u-shape':
+            case 'u-shape': {
+                const armW = halfL * 0.35;
                 points = [
-                    new THREE.Vector2(-4, -4),
-                    new THREE.Vector2(4, -4),
-                    new THREE.Vector2(4, 4),
-                    new THREE.Vector2(2, 4),
-                    new THREE.Vector2(2, 0),
-                    new THREE.Vector2(-2, 0),
-                    new THREE.Vector2(-2, 4),
-                    new THREE.Vector2(-4, 4)
+                    new THREE.Vector2(-halfL, -halfW),
+                    new THREE.Vector2(halfL, -halfW),
+                    new THREE.Vector2(halfL, halfW),
+                    new THREE.Vector2(halfL - armW, halfW),
+                    new THREE.Vector2(halfL - armW, 0),
+                    new THREE.Vector2(-halfL + armW, 0),
+                    new THREE.Vector2(-halfL + armW, halfW),
+                    new THREE.Vector2(-halfL, halfW)
                 ];
                 break;
-            case 't-shape':
+            }
+            case 't-shape': {
+                const stemW = halfL * 0.5;
                 points = [
-                    new THREE.Vector2(-4, -2),
-                    new THREE.Vector2(4, -2),
-                    new THREE.Vector2(4, 2),
-                    new THREE.Vector2(2, 2),
-                    new THREE.Vector2(2, 6),
-                    new THREE.Vector2(-2, 6),
-                    new THREE.Vector2(-2, 2),
-                    new THREE.Vector2(-4, 2)
+                    new THREE.Vector2(-halfL, -halfW * 0.5),
+                    new THREE.Vector2(halfL, -halfW * 0.5),
+                    new THREE.Vector2(halfL, halfW * 0.5),
+                    new THREE.Vector2(stemW, halfW * 0.5),
+                    new THREE.Vector2(stemW, halfW),
+                    new THREE.Vector2(-stemW, halfW),
+                    new THREE.Vector2(-stemW, halfW * 0.5),
+                    new THREE.Vector2(-halfL, halfW * 0.5)
                 ];
                 break;
+            }
             default:
-                // Fallback to square
                 points = [
-                    new THREE.Vector2(-4, -4),
-                    new THREE.Vector2(4, -4),
-                    new THREE.Vector2(4, 4),
-                    new THREE.Vector2(-4, 4)
+                    new THREE.Vector2(-halfL, -halfW),
+                    new THREE.Vector2(halfL, -halfW),
+                    new THREE.Vector2(halfL, halfW),
+                    new THREE.Vector2(-halfL, halfW)
                 ];
         }
-
-        // Tăng kích thước phòng x3
-        points.forEach(p => {
-            p.x *= 3;
-            p.y *= 3;
-        });
 
         // Materials
         const floorMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.8 });
@@ -1096,15 +1097,17 @@ export class RoomEngine {
             // Deselect any furniture
             this.deselectFurniture();
 
-            // Position camera at human eye height inside the room
-            this.camera.position.set(0, this._fpHeight, 5);
-            this.camera.lookAt(0, this._fpHeight, 0);
+            // Position camera at room center, at human eye height
+            const cx = this.houseCenter.x;
+            const cz = this.houseCenter.z;
+            this.camera.position.set(cx, this._fpHeight, cz);
+            this.camera.lookAt(cx, this._fpHeight, cz - 1);
 
             // Disable orbit features: no pan, no zoom
             this.orbitControls.enablePan = false;
             this.orbitControls.enableZoom = false;
             this.orbitControls.enableRotate = false;
-            this.orbitControls.target.set(0, this._fpHeight, 0);
+            this.orbitControls.target.set(cx, this._fpHeight, cz - 1);
             this.orbitControls.update();
 
             // Request pointer lock for free mouse-look (like FPS game)

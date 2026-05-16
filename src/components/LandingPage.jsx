@@ -15,154 +15,147 @@ export default function LandingPage() {
                 <div className="grid-overlay"></div>
             </div>
 
-            {/* Navigation */}
-            <nav className="landing-nav">
-                <div className="landing-logo">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#landingLogoGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <defs>
-                            <linearGradient id="landingLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style={{ stopColor: '#a78bfa' }} />
-                                <stop offset="100%" style={{ stopColor: '#06b6d4' }} />
-                            </linearGradient>
-                        </defs>
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        <polyline points="9 22 9 12 15 12 15 22" />
-                    </svg>
-                    <span>Room Designer</span>
-                </div>
-                <div className="landing-nav-links">
-                    <a href="#features" className="nav-link">Tính năng</a>
-                    <a href="#how-it-works" className="nav-link">Hướng dẫn</a>
-                </div>
-            </nav>
-
-            {/* Hero Section */}
+            {/* Hero Section — two-column layout */}
             <section className="hero-section">
-                <div className="hero-badge">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    Công cụ thiết kế 3D miễn phí
-                </div>
+                <div className="hero-content">
+                    {/* Left column */}
+                    <div className="hero-left">
+                        <div className="hero-badge">
+                            <span className="hero-badge-dot"></span>
+                            Trusted by 50,000+ interior designers
+                        </div>
 
-                <h1 className="hero-title">
-                    Thiết kế ngôi nhà
-                    <span className="hero-title-gradient"> mơ ước </span>
-                    của bạn
-                </h1>
+                        <h1 className="hero-title">
+                            Design Your<br />
+                            Space in <span className="hero-title-accent">3D</span>
+                        </h1>
 
-                <p className="hero-subtitle">
-                    Trải nghiệm thiết kế nội thất 3D trực quan. Chọn kiểu nhà, bố trí nội thất
-                    và xem ngôi nhà của bạn trở nên sống động chỉ trong vài phút.
-                </p>
+                        <p className="hero-subtitle">
+                            Place, rotate, and customize real 3D furniture in your room
+                            before you buy. No guessing. Just perfect spaces.
+                        </p>
 
-                <div className="hero-actions">
-                    <button
-                        id="start-design-btn"
-                        className="hero-btn-primary"
-                        onClick={() => navigate('/design')}
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                        </svg>
-                        Bắt đầu thiết kế
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                            <polyline points="12 5 19 12 12 19" />
-                        </svg>
-                    </button>
-                </div>
-
-                {/* Hero 3D preview illustration */}
-                <div className="hero-visual">
-                    <div className="hero-card hero-card-1">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#card1Grad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <defs>
-                                <linearGradient id="card1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style={{ stopColor: '#a78bfa' }} />
-                                    <stop offset="100%" style={{ stopColor: '#06b6d4' }} />
-                                </linearGradient>
-                            </defs>
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                            <polyline points="9 22 9 12 15 12 15 22" />
-                        </svg>
-                        <span>Mô hình 3D</span>
+                        <div className="hero-actions">
+                            <button
+                                className="hero-btn-primary"
+                                onClick={() => navigate('/design')}
+                            >
+                                Start Designing Free
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                    <polyline points="12 5 19 12 12 19" />
+                                </svg>
+                            </button>
+                            <button
+                                className="hero-btn-secondary"
+                                onClick={() => {
+                                    const el = document.getElementById('how-it-works');
+                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
+                                </svg>
+                                Watch Demo
+                            </button>
+                        </div>
                     </div>
-                    <div className="hero-card hero-card-2">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#card2Grad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <defs>
-                                <linearGradient id="card2Grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style={{ stopColor: '#34d399' }} />
-                                    <stop offset="100%" style={{ stopColor: '#06b6d4' }} />
-                                </linearGradient>
-                            </defs>
-                            <rect x="2" y="7" width="20" height="15" rx="2" ry="2" />
-                            <polyline points="17 2 12 7 7 2" />
-                        </svg>
-                        <span>Nội thất</span>
-                    </div>
-                    <div className="hero-card hero-card-3">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#card3Grad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <defs>
-                                <linearGradient id="card3Grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style={{ stopColor: '#f472b6' }} />
-                                    <stop offset="100%" style={{ stopColor: '#a78bfa' }} />
-                                </linearGradient>
-                            </defs>
-                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                            <polyline points="17 6 23 6 23 12" />
-                        </svg>
-                        <span>Tùy chỉnh</span>
+
+                    {/* Right column — 3D editor mockup */}
+                    <div className="hero-right">
+                        <div className="hero-mockup">
+                            <div className="mockup-toolbar">
+                                <div className="mockup-toolbar-dots">
+                                    <span className="dot dot-red"></span>
+                                    <span className="dot dot-yellow"></span>
+                                    <span className="dot dot-green"></span>
+                                </div>
+                                <div className="mockup-toolbar-btn">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21.5 2v6h-6" />
+                                        <path d="M21.34 15.57a10 10 0 1 1-.57-8.38" />
+                                    </svg>
+                                </div>
+                                <div className="mockup-coords">X: 12 Y: 45 Z: 0</div>
+                            </div>
+                            <div className="mockup-viewport">
+                                {/* Grid floor */}
+                                <div className="mockup-grid">
+                                    {Array.from({ length: 36 }).map((_, i) => (
+                                        <div key={i} className="mockup-grid-cell"></div>
+                                    ))}
+                                </div>
+                                {/* 3D Model Viewer */}
+                                <div className="mockup-furniture" style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}>
+                                    <model-viewer
+                                        src="/tiny_isometric_room.glb"
+                                        camera-controls
+                                        disable-zoom
+                                        environment-image="neutral"
+                                        shadow-intensity="1"
+                                        exposure="1.2"
+                                        style={{ width: '100%', height: '100%', outline: 'none', backgroundColor: 'transparent' }}
+                                    ></model-viewer>
+                                </div>
+                                {/* Floating gizmo */}
+                                <div className="mockup-gizmo">
+                                    <div className="gizmo-line gizmo-x"></div>
+                                    <div className="gizmo-line gizmo-y"></div>
+                                    <div className="gizmo-line gizmo-z"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* Features Section */}
             <section id="features" className="features-section">
+                <h2 className="section-title">Everything You Need to Design Perfectly</h2>
+                <p className="section-subtitle">Professional-grade tools made simple for everyone.</p>
                 <div className="features-grid">
                     <div className="feature-card">
-                        <div className="feature-icon feature-icon-purple">
+                        <div className="feature-icon feature-icon-cyan">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <rect x="3" y="3" width="7" height="7" />
-                                <rect x="14" y="3" width="7" height="7" />
-                                <rect x="14" y="14" width="7" height="7" />
-                                <rect x="3" y="14" width="7" height="7" />
+                                <path d="M21.5 2v6h-6" />
+                                <path d="M21.34 15.57a10 10 0 1 1-.57-8.38" />
                             </svg>
                         </div>
-                        <h3>Chọn kiểu nhà</h3>
-                        <p>Nhiều mẫu nhà sẵn có: hình vuông, chữ L, chữ U, chữ T... để bạn lựa chọn</p>
+                        <h3>Real-Time 3D Rotation</h3>
+                        <p>Spin, tilt and inspect every furniture piece from any angle with fluid 60fps interaction.</p>
                     </div>
                     <div className="feature-card">
-                        <div className="feature-icon feature-icon-cyan">
+                        <div className="feature-icon feature-icon-purple">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                             </svg>
                         </div>
-                        <h3>Xem 3D trực quan</h3>
-                        <p>Xoay, zoom, di chuyển camera để xem ngôi nhà từ mọi góc độ trong không gian 3D</p>
+                        <h3>Room Dimension Mapping</h3>
+                        <p>Input your room's exact measurements and see furniture fit perfectly to scale.</p>
                     </div>
                     <div className="feature-card">
                         <div className="feature-icon feature-icon-green">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19" />
-                                <line x1="5" y1="12" x2="19" y2="12" />
+                                <circle cx="13.5" cy="6.5" r="2.5" />
+                                <path d="M17 22H2a5 5 0 0 1 5-5h5a5 5 0 0 1 5 5z" />
+                                <path d="M22 10l-4 4-2-2" />
                             </svg>
                         </div>
-                        <h3>Thêm nội thất</h3>
-                        <p>Kéo thả file 3D nội thất vào ngôi nhà, di chuyển, xoay và thay đổi kích thước tự do</p>
+                        <h3>Material & Color Studio</h3>
+                        <p>Swap wood finishes, fabrics, and colors in real time to match your vision.</p>
                     </div>
                 </div>
             </section>
 
             {/* How it works */}
             <section id="how-it-works" className="steps-section">
-                <h2 className="section-title">Cách sử dụng</h2>
+                <h2 className="section-title">How It Works</h2>
                 <div className="steps-grid">
                     <div className="step-card">
                         <div className="step-number">1</div>
-                        <h4>Chọn kiểu nhà</h4>
-                        <p>Lựa chọn mẫu nhà phù hợp với nhu cầu của bạn</p>
+                        <h4>Choose Room Shape</h4>
+                        <p>Select a room layout that matches your space</p>
                     </div>
                     <div className="step-connector">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -172,8 +165,8 @@ export default function LandingPage() {
                     </div>
                     <div className="step-card">
                         <div className="step-number">2</div>
-                        <h4>Bố trí nội thất</h4>
-                        <p>Thêm và sắp xếp đồ nội thất bên trong ngôi nhà</p>
+                        <h4>Place Furniture</h4>
+                        <p>Add and arrange furniture inside your room</p>
                     </div>
                     <div className="step-connector">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -183,11 +176,29 @@ export default function LandingPage() {
                     </div>
                     <div className="step-card">
                         <div className="step-number">3</div>
-                        <h4>Hoàn thiện</h4>
-                        <p>Xem kết quả 3D và tùy chỉnh theo ý thích</p>
+                        <h4>Finalize Design</h4>
+                        <p>View results in 3D and customize to your liking</p>
                     </div>
                 </div>
             </section>
+
+            {/* Footer */}
+            <footer className="landing-footer">
+                <div className="footer-left">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#footerLogoGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <defs>
+                            <linearGradient id="footerLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style={{ stopColor: '#a78bfa' }} />
+                                <stop offset="100%" style={{ stopColor: '#06b6d4' }} />
+                            </linearGradient>
+                        </defs>
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span>Room Designer AI</span>
+                </div>
+                <p className="footer-copy">© 2026 Room Designer AI. All rights reserved.</p>
+            </footer>
         </div>
     );
 }

@@ -8,16 +8,16 @@ import ResizePanel from './ResizePanel';
 import ToastContainer from './ToastContainer';
 import HelpTip from './HelpTip';
 import HouseShapeModal from './HouseShapeModal';
+import AddFurnitureModal from './AddFurnitureModal';
 import { useLocation } from 'react-router-dom';
 
 export default function DesignerPage() {
     const [showShapeModal, setShowShapeModal] = useState(false);
+    const [showAddFurnitureModal, setShowAddFurnitureModal] = useState(false);
     const [selectedShape, setSelectedShape] = useState(null);
     const canvasRef = useRef(null);
     const furnitureInputRef = useRef(null);
     const fileInputRef = useRef(null);
-    const textureInputRef = useRef(null);
-    const uploadTargetRef = useRef(null);
     const location = useLocation();
 
     const {
@@ -36,8 +36,6 @@ export default function DesignerPage() {
         buildHouse,
         loadHouse,
         loadFurniture,
-        applyTextureToFloor,
-        applyTextureToWall,
         selectFurnitureById,
         deselectFurniture,
         deleteFurniture,
@@ -51,16 +49,41 @@ export default function DesignerPage() {
         toggleGrid,
     } = useThreeEngine(canvasRef);
 
+    const modelLoadedRef = useRef(false);
+
     // Show modal on mount if no house loaded
     useEffect(() => {
         if (!isHouseLoaded && !selectedShape) {
-            // Slight delay so the user sees the page transition before modal appears
-            const timer = setTimeout(() => {
-                setShowShapeModal(true);
-            }, 300);
-            return () => clearTimeout(timer);
+            if (location.state?.generatedModelUrl) {
+                // Auto generate square room and load the model
+                const shape = { id: 'square', dimensions: { length: 8, width: 8 } };
+                setSelectedShape(shape);
+                buildHouse(shape.id, shape.dimensions);
+
+                if (!modelLoadedRef.current) {
+                    modelLoadedRef.current = true;
+                    // Fetch and load the generated model
+                    fetch(location.state.generatedModelUrl)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const filename = location.state.generatedModelUrl.split('/').pop() || 'model.glb';
+                            const file = new File([blob], filename, { type: 'model/gltf-binary' });
+                            loadFurniture(file);
+                        })
+                        .catch(err => console.error('Failed to load generated model:', err));
+                }
+
+                // Clear state to prevent reloading on refresh
+                window.history.replaceState({}, document.title);
+            } else {
+                // Slight delay so the user sees the page transition before modal appears
+                const timer = setTimeout(() => {
+                    setShowShapeModal(true);
+                }, 300);
+                return () => clearTimeout(timer);
+            }
         }
-    }, [isHouseLoaded, selectedShape]);
+    }, [isHouseLoaded, selectedShape, location.state, buildHouse, loadFurniture]);
 
     const handleShapeSelect = useCallback((shape) => {
         setSelectedShape(shape);
@@ -72,8 +95,8 @@ export default function DesignerPage() {
                 fileInputRef.current?.click();
             }, 500);
         } else {
-            // Procedurally generate the room
-            buildHouse(shape.id);
+            // Procedurally generate the room with user dimensions
+            buildHouse(shape.id, shape.dimensions);
         }
     }, [buildHouse]);
 
@@ -84,7 +107,7 @@ export default function DesignerPage() {
     }, [loadHouse]);
 
     const handleAddFurniture = useCallback(() => {
-        furnitureInputRef.current?.click();
+        setShowAddFurnitureModal(true);
     }, []);
 
     const handleFurnitureFileChange = useCallback((e) => {
@@ -97,23 +120,6 @@ export default function DesignerPage() {
         e.target.value = '';
     }, [loadFurniture]);
 
-    const handleUploadTextureClick = useCallback((id) => {
-        uploadTargetRef.current = id;
-        textureInputRef.current?.click();
-    }, []);
-
-    const handleTextureFileChange = useCallback((e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (uploadTargetRef.current === 'sys-floor') {
-                applyTextureToFloor(file);
-            } else if (uploadTargetRef.current === 'sys-wall') {
-                applyTextureToWall(file);
-            }
-        }
-        e.target.value = '';
-        uploadTargetRef.current = null;
-    }, [applyTextureToFloor, applyTextureToWall]);
 
     return (
         <div id="app">
@@ -156,13 +162,6 @@ export default function DesignerPage() {
                 hidden
                 onChange={handleCustomFileChange}
             />
-            <input
-                ref={textureInputRef}
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={handleTextureFileChange}
-            />
 
             {isHouseLoaded && (
                 <FurniturePanel
@@ -171,7 +170,6 @@ export default function DesignerPage() {
                     onSelect={selectFurnitureById}
                     onDuplicate={duplicateFurniture}
                     onDelete={deleteFurniture}
-                    onUploadTexture={handleUploadTextureClick}
                 />
             )}
 
@@ -199,6 +197,22 @@ export default function DesignerPage() {
                 isOpen={showShapeModal}
                 onClose={() => setShowShapeModal(false)}
                 onSelect={handleShapeSelect}
+            />
+
+            <AddFurnitureModal
+                isOpen={showAddFurnitureModal}
+                onClose={() => setShowAddFurnitureModal(false)}
+                onUploadLocal={() => furnitureInputRef.current?.click()}
+                onLoadGeneratedModel={(url) => {
+                    fetch(url)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const filename = url.split('/').pop() || 'model.glb';
+                            const file = new File([blob], filename, { type: 'model/gltf-binary' });
+                            loadFurniture(file);
+                        })
+                        .catch(err => console.error('Failed to load generated model:', err));
+                }}
             />
         </div>
     );

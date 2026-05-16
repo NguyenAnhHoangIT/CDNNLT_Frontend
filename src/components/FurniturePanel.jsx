@@ -7,14 +7,7 @@ export default function FurniturePanel({
     onSelect,
     onDuplicate,
     onDelete,
-    onUploadTexture,
 }) {
-    const [isSystemOpen, setIsSystemOpen] = useState(true);
-
-    const systemItems = [
-        { id: 'sys-floor', name: 'Sàn nhà', isSystem: true, fileSize: 0 },
-        { id: 'sys-wall', name: 'Tường nhà', isSystem: true, fileSize: 0 }
-    ];
 
     return (
         <div id="furniture-panel">
@@ -29,54 +22,6 @@ export default function FurniturePanel({
                 <span className="badge">{furnitureList.length}</span>
             </div>
             <div className="panel-body" id="furniture-list" style={{ padding: 0 }}>
-                {/* System items as collapsible Dropdown */}
-                <div className="furniture-group">
-                    <div 
-                        className="group-header" 
-                        onClick={() => setIsSystemOpen(!isSystemOpen)}
-                        style={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
-                            alignItems: 'center', 
-                            cursor: 'pointer', 
-                            padding: '12px 16px', 
-                            backgroundColor: 'rgba(0,0,0,0.02)', 
-                            borderBottom: '1px solid var(--border-color)', 
-                            fontWeight: 600, 
-                            fontSize: '0.85rem', 
-                            color: 'var(--text-secondary)' 
-                        }}
-                    >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                            </svg>
-                            Cấu trúc phòng
-                        </span>
-                        <svg 
-                            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                            style={{ transform: isSystemOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
-                        >
-                            <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                    </div>
-                    {isSystemOpen && (
-                        <div className="group-content" style={{ padding: '8px', borderBottom: '1px solid var(--border-color)' }}>
-                            {systemItems.map(item => (
-                                <FurnitureItem
-                                    key={item.id}
-                                    item={item}
-                                    isSelected={false} // Never selected
-                                    onSelect={() => onUploadTexture(item.id)} // Click row to upload
-                                    onDuplicate={onDuplicate}
-                                    onDelete={onDelete}
-                                    onUploadTexture={onUploadTexture}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
                 {/* Normal furniture items */}
                 <div className="furniture-group">
                     <div className="group-header" style={{ padding: '12px 16px 8px 16px', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
