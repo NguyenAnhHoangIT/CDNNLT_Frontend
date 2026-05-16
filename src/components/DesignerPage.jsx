@@ -55,22 +55,36 @@ export default function DesignerPage() {
     useEffect(() => {
         if (!isHouseLoaded && !selectedShape) {
             if (location.state?.generatedModelUrl) {
-                // Auto generate square room and load the model
-                const shape = { id: 'square', dimensions: { length: 8, width: 8 } };
-                setSelectedShape(shape);
-                buildHouse(shape.id, shape.dimensions);
+                const isRoom = location.state?.isRoom;
 
                 if (!modelLoadedRef.current) {
                     modelLoadedRef.current = true;
-                    // Fetch and load the generated model
-                    fetch(location.state.generatedModelUrl)
-                        .then(res => res.blob())
-                        .then(blob => {
-                            const filename = location.state.generatedModelUrl.split('/').pop() || 'model.glb';
-                            const file = new File([blob], filename, { type: 'model/gltf-binary' });
-                            loadFurniture(file);
-                        })
-                        .catch(err => console.error('Failed to load generated model:', err));
+
+                    if (isRoom) {
+                        // Load the generated model AS the room/scene itself
+                        fetch(location.state.generatedModelUrl)
+                            .then(res => res.blob())
+                            .then(blob => {
+                                const filename = location.state.generatedModelUrl.split('/').pop() || 'room.glb';
+                                const file = new File([blob], filename, { type: 'model/gltf-binary' });
+                                loadHouse(file);
+                            })
+                            .catch(err => console.error('Failed to load generated room:', err));
+                    } else {
+                        // Auto generate square room and load as furniture inside it
+                        const shape = { id: 'square', dimensions: { length: 8, width: 8 } };
+                        setSelectedShape(shape);
+                        buildHouse(shape.id, shape.dimensions);
+
+                        fetch(location.state.generatedModelUrl)
+                            .then(res => res.blob())
+                            .then(blob => {
+                                const filename = location.state.generatedModelUrl.split('/').pop() || 'model.glb';
+                                const file = new File([blob], filename, { type: 'model/gltf-binary' });
+                                loadFurniture(file);
+                            })
+                            .catch(err => console.error('Failed to load generated model:', err));
+                    }
                 }
 
                 // Clear state to prevent reloading on refresh
@@ -83,7 +97,7 @@ export default function DesignerPage() {
                 return () => clearTimeout(timer);
             }
         }
-    }, [isHouseLoaded, selectedShape, location.state, buildHouse, loadFurniture]);
+    }, [isHouseLoaded, selectedShape, location.state, buildHouse, loadHouse, loadFurniture]);
 
     const handleShapeSelect = useCallback((shape) => {
         setSelectedShape(shape);
