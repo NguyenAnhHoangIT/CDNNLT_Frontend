@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import { API_BASE, getModelUrl, isSuccessfulResponse, parseBackendResponse } from '../api/backend';
 import './DesignPages.css';
-
-const API_BASE = 'http://localhost:8888';
 
 export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLoadGeneratedModel }) {
     const [isClosing, setIsClosing] = useState(false);
@@ -32,8 +31,8 @@ export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLo
                     fetch(`${API_BASE}/option/objects`),
                     fetch(`${API_BASE}/option/styles`)
                 ]);
-                const objData = await objRes.json();
-                const styleData = await styleRes.json();
+                const objData = await parseBackendResponse(objRes);
+                const styleData = await parseBackendResponse(styleRes);
                 setObjects(objData);
                 setStyles(styleData);
                 if (objData.length > 0) setObject(objData[0].name);
@@ -91,10 +90,11 @@ export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLo
             let response, data;
 
             if (selectedMethod === 'choice') {
+                const selectedStyle = styles.find(s => s.name === style);
                 response = await fetch(`${API_BASE}/model/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ object, style: style.toLowerCase() })
+                    body: JSON.stringify({ object, style: selectedStyle?.prompt || style })
                 });
             } else if (selectedMethod === 'describe') {
                 if (!description.trim()) {
@@ -121,15 +121,16 @@ export default function AddFurnitureModal({ isOpen, onClose, onUploadLocal, onLo
                 });
             }
 
-            data = await response.json();
+            data = await parseBackendResponse(response);
 
-            if (data.success === 'true') {
-                onLoadGeneratedModel(`${API_BASE}/${data.path}`);
+            const modelUrl = getModelUrl(data);
+            if (isSuccessfulResponse(data) && modelUrl) {
+                onLoadGeneratedModel(modelUrl);
                 handleClose();
             } else {
                 setError(data.error || 'Đã xảy ra lỗi khi tạo mô hình.');
             }
-        } catch (err) {
+        } catch {
             setError('Không thể kết nối đến server. Vui lòng kiểm tra backend.');
         } finally {
             setLoading(false);

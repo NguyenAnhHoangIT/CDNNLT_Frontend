@@ -31,7 +31,6 @@ export default function Navbar() {
                     <Link to="/design-by-choice" className={`nav-item ${location.pathname === '/design-by-choice' ? 'active' : ''}`}>Theo lựa chọn</Link>
                     <Link to="/design-as-described" className={`nav-item ${location.pathname === '/design-as-described' ? 'active' : ''}`}>Theo mô tả</Link>
                     <Link to="/design-according-to-photo" className={`nav-item ${location.pathname === '/design-according-to-photo' ? 'active' : ''}`}>Theo ảnh</Link>
-                    <Link to="/room-from-photo" className={`nav-item ${location.pathname === '/room-from-photo' ? 'active' : ''}`}>Phòng từ ảnh</Link>
                     <Link to="/option-config" className={`nav-item ${location.pathname === '/option-config' ? 'active' : ''}`}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4, verticalAlign: 'middle' }}>
                             <circle cx="12" cy="12" r="3" />

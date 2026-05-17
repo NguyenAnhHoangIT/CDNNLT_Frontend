@@ -5,7 +5,6 @@ import ChoicePage from './components/ChoicePage';
 import DescribePage from './components/DescribePage';
 import PhotoPage from './components/PhotoPage';
 import OptionConfigPage from './components/OptionConfigPage';
-import RoomPhotoPage from './components/RoomPhotoPage';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -20,7 +19,6 @@ export default function App() {
                 <Route path="/design-as-described" element={<DescribePage />} />
                 <Route path="/design-according-to-photo" element={<PhotoPage />} />
                 <Route path="/option-config" element={<OptionConfigPage />} />
-                <Route path="/room-from-photo" element={<RoomPhotoPage />} />
             </Routes>
         </Router>
     );

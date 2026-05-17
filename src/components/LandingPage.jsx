@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import heroImage from '../assets/hero.png';
 
 export default function LandingPage() {
     const navigate = useNavigate();
@@ -86,17 +87,12 @@ export default function LandingPage() {
                                         <div key={i} className="mockup-grid-cell"></div>
                                     ))}
                                 </div>
-                                {/* 3D Model Viewer */}
                                 <div className="mockup-furniture" style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}>
-                                    <model-viewer
-                                        src="/tiny_isometric_room.glb"
-                                        camera-controls
-                                        disable-zoom
-                                        environment-image="neutral"
-                                        shadow-intensity="1"
-                                        exposure="1.2"
-                                        style={{ width: '100%', height: '100%', outline: 'none', backgroundColor: 'transparent' }}
-                                    ></model-viewer>
+                                    <img
+                                        src={heroImage}
+                                        alt=""
+                                        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                                    />
                                 </div>
                                 {/* Floating gizmo */}
                                 <div className="mockup-gizmo">

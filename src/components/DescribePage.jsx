@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE, getModelUrl, isSuccessfulResponse, parseBackendResponse } from '../api/backend';
 import './DesignPages.css';
 
 export default function DescribePage() {
@@ -18,19 +19,20 @@ export default function DescribePage() {
         setError(null);
 
         try {
-            const response = await fetch('http://localhost:8888/model/generate_custom', {
+            const response = await fetch(`${API_BASE}/model/generate_custom`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ description })
             });
 
-            const data = await response.json();
-            if (data.success === 'true') {
-                navigate('/design', { state: { generatedModelUrl: `http://localhost:8888/${data.path}` } });
+            const data = await parseBackendResponse(response);
+            const modelUrl = getModelUrl(data);
+            if (isSuccessfulResponse(data) && modelUrl) {
+                navigate('/design', { state: { generatedModelUrl: modelUrl } });
             } else {
                 setError(data.error || 'Đã xảy ra lỗi khi tạo mô hình.');
             }
-        } catch (err) {
+        } catch {
             setError('Không thể kết nối đến server. Vui lòng kiểm tra backend.');
         } finally {
             setLoading(false);

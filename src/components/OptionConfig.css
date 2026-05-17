@@ -1,5 +1,5 @@
 .config-container {
-    max-width: 800px;
+    max-width: 960px;
     margin: 0 auto;
     background: var(--bg-glass);
     border: 1px solid var(--border-color);
@@ -126,6 +126,33 @@
     cursor: not-allowed;
 }
 
+.config-upload-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 16px;
+    background: transparent;
+    color: var(--accent-cyan);
+    border: 1px solid var(--accent-cyan);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.config-upload-btn:hover:not(.disabled) {
+    background: rgba(6, 182, 212, 0.1);
+    transform: translateY(-1px);
+}
+
+.config-upload-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* List */
 .config-list {
     display: flex;
@@ -197,8 +224,9 @@
 
 .config-edit-btn,
 .config-delete-btn {
-    width: 32px;
+    min-width: 32px;
     height: 32px;
+    padding: 0 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -208,6 +236,8 @@
     color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition-fast);
+    font-size: 0.78rem;
+    font-weight: 600;
 }
 
 .config-edit-btn:hover {
@@ -272,6 +302,15 @@
 .config-cancel-btn:hover {
     background: var(--bg-tertiary);
     color: var(--text-primary);
+}
+
+.config-item-document {
+    align-items: flex-start;
+}
+
+.config-document-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 /* Success message */

@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import './GenerationResult.css';
 import RoomViewer from './RoomViewer';
+import { getModelUrl } from '../api/backend';
 
 export default function GenerationResult({ result, onReset }) {
     const [copySuccess, setCopySuccess] = useState(false);
 
     if (!result) return null;
 
-    const glbUrl = `http://localhost:8888/${result.path}`;
+    const glbUrl = getModelUrl(result);
 
     const handleCopyPath = () => {
-        navigator.clipboard.writeText(result.path);
+        navigator.clipboard.writeText(glbUrl || result.path || result.url || '');
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
     };
@@ -33,7 +34,7 @@ export default function GenerationResult({ result, onReset }) {
                 </div>
 
                 <div className="result-actions">
-                    <a href={glbUrl} download className="action-btn download-btn">
+                    <a href={glbUrl || '#'} download className="action-btn download-btn">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                             <polyline points="7 10 12 15 17 10" />

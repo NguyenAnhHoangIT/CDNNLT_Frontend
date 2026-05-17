@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE, getModelUrl, isSuccessfulResponse, parseBackendResponse } from '../api/backend';
 import './DesignPages.css';
-
-const API_BASE = 'http://localhost:8888';
 
 export default function ChoicePage() {
     const navigate = useNavigate();
@@ -22,13 +21,13 @@ export default function ChoicePage() {
                     fetch(`${API_BASE}/option/objects`),
                     fetch(`${API_BASE}/option/styles`)
                 ]);
-                const objData = await objRes.json();
-                const styleData = await styleRes.json();
+                const objData = await parseBackendResponse(objRes);
+                const styleData = await parseBackendResponse(styleRes);
                 setObjects(objData);
                 setStyles(styleData);
                 if (objData.length > 0) setObject(objData[0].name);
                 if (styleData.length > 0) setStyle(styleData[0].name);
-            } catch (err) {
+            } catch {
                 setError('Không thể tải danh sách tùy chọn. Vui lòng kiểm tra backend.');
             } finally {
                 setFetchingOptions(false);
@@ -42,19 +41,21 @@ export default function ChoicePage() {
         setError(null);
 
         try {
+            const selectedStyle = styles.find(s => s.name === style);
             const response = await fetch(`${API_BASE}/model/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ object, style: style.toLowerCase() })
+                body: JSON.stringify({ object, style: selectedStyle?.prompt || style })
             });
 
-            const data = await response.json();
-            if (data.success === 'true') {
-                navigate('/design', { state: { generatedModelUrl: `${API_BASE}/${data.path}` } });
+            const data = await parseBackendResponse(response);
+            const modelUrl = getModelUrl(data);
+            if (isSuccessfulResponse(data) && modelUrl) {
+                navigate('/design', { state: { generatedModelUrl: modelUrl } });
             } else {
                 setError(data.error || 'Đã xảy ra lỗi khi tạo mô hình.');
             }
-        } catch (err) {
+        } catch {
             setError('Không thể kết nối đến server. Vui lòng kiểm tra backend.');
         } finally {
             setLoading(false);
